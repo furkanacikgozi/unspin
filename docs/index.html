@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unspin — Understand Claude Code's Spinner Verbs</title>
+<meta name="description" content="Add plain English explanations to Claude Code's obscure spinner verbs. One command, zero dependencies.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a2e;overflow-x:hidden}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);color:#fff;text-align:center;padding:2rem 1rem}
+.hero-title{font-size:3.5rem;font-weight:800;margin-bottom:0.5rem}
+.hero-subtitle{font-size:1.25rem;opacity:0.9;margin-bottom:2.5rem;max-width:500px}
+
+/* Terminal */
+.terminal{background:#1a1a2e;border-radius:14px;padding:1.25rem 1.75rem;max-width:520px;width:100%;text-align:left;font-family:'SF Mono',Monaco,'Cascadia Code',monospace;margin-bottom:2.5rem;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.terminal-dots{display:flex;gap:6px;margin-bottom:1rem}
+.terminal-dots span{width:12px;height:12px;border-radius:50%}
+.terminal-dots .red{background:#ff5f57}
+.terminal-dots .yellow{background:#ffbd2e}
+.terminal-dots .green{background:#28c840}
+.terminal-line{font-size:1.05rem;line-height:1.8;min-height:1.8em}
+.terminal-line .dot{color:#888}
+.terminal-line .verb{color:#f0abfc;transition:opacity 0.4s}
+.terminal-line .meaning{color:#34d399;transition:opacity 0.4s}
+.terminal-line .thinking{color:#666}
+
+/* CTA Button */
+.cta{background:rgba(0,0,0,0.35);border:2px solid rgba(255,255,255,0.25);color:#fff;padding:0.85rem 2rem;border-radius:10px;font-family:'SF Mono',Monaco,monospace;font-size:1.1rem;cursor:pointer;transition:all 0.2s;backdrop-filter:blur(10px)}
+.cta:hover{background:rgba(0,0,0,0.5);border-color:rgba(255,255,255,0.4);transform:translateY(-1px)}
+.cta:focus{outline:2px solid #fff;outline-offset:2px}
+.cta.copied{background:rgba(52,211,153,0.3);border-color:#34d399}
+
+/* Before/After */
+.before-after{padding:5rem 1.5rem;background:#f8f9ff;text-align:center}
+.before-after h2{font-size:2rem;margin-bottom:0.5rem}
+.before-after .section-sub{color:#666;margin-bottom:2.5rem;font-size:1.1rem}
+.compare{display:flex;gap:2rem;max-width:800px;margin:0 auto;justify-content:center}
+.compare-box{flex:1;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.08)}
+.compare-header{padding:0.75rem;font-weight:700;font-size:0.95rem;text-align:center}
+.compare-header.before{background:#fee2e2;color:#dc2626}
+.compare-header.after{background:#d1fae5;color:#059669}
+.compare-body{background:#1a1a2e;padding:1.25rem;font-family:'SF Mono',Monaco,monospace;font-size:0.9rem;line-height:2;color:#ccc}
+.compare-body .meaning{color:#34d399}
+.compare-body .confused{color:#666;margin-top:0.5rem}
+.compare-body .happy{color:#34d399;margin-top:0.5rem}
+
+/* Features */
+.features{padding:5rem 1.5rem;text-align:center;background:#fff}
+.features h2{font-size:2rem;margin-bottom:2.5rem}
+.cards{display:flex;gap:1.5rem;max-width:900px;margin:0 auto;justify-content:center}
+.card{flex:1;background:#fff;border-radius:16px;padding:2rem 1.5rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);border:1px solid #eee;transition:transform 0.2s}
+.card:hover{transform:translateY(-4px)}
+.card-icon{font-size:2.5rem;margin-bottom:0.75rem}
+.card h3{font-size:1.15rem;margin-bottom:0.5rem}
+.card p{color:#666;font-size:0.95rem;line-height:1.5}
+.card code{background:#f3f0ff;color:#764ba2;padding:0.15rem 0.4rem;border-radius:4px;font-size:0.85rem}
+
+/* Footer */
+.footer-cta{padding:4rem 1.5rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);text-align:center;color:#fff}
+.footer-cta h2{font-size:2rem;margin-bottom:0.5rem}
+.footer-cta p{opacity:0.85;margin-bottom:2rem;font-size:1.1rem}
+.footer-buttons{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.footer-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.85rem 1.75rem;border-radius:10px;font-size:1.05rem;font-weight:600;text-decoration:none;transition:all 0.2s}
+.footer-btn:hover{transform:translateY(-2px)}
+.footer-btn.github{background:#fff;color:#1a1a2e}
+.footer-btn.npm{background:rgba(255,255,255,0.15);color:#fff;border:2px solid rgba(255,255,255,0.3)}
+.footer-btn.npm:hover{background:rgba(255,255,255,0.25)}
+.footer-text{margin-top:2.5rem;opacity:0.6;font-size:0.85rem}
+
+/* Responsive */
+@media(max-width:700px){
+  .hero-title{font-size:2.5rem}
+  .hero-subtitle{font-size:1.05rem}
+  .compare{flex-direction:column;max-width:400px}
+  .cards{flex-direction:column;max-width:400px;margin:0 auto}
+  .footer-buttons{flex-direction:column;align-items:center}
+}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+  .terminal-line .verb,.terminal-line .meaning{transition:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <h1 class="hero-title">🔮 unspin</h1>
+  <p class="hero-subtitle">Finally understand what Claude Code is doing</p>
+  <div class="terminal">
+    <div class="terminal-dots"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+    <div class="terminal-line">
+      <span class="dot">·</span>
+      <span class="verb" id="verb">Prestidigitating</span>
+      <span class="meaning" id="meaning">[doing magic tricks]</span><span class="thinking">… (thinking)</span>
+    </div>
+  </div>
+  <button class="cta" id="cta" onclick="copyCommand()" aria-label="Copy npx unspin to clipboard">$ npx unspin</button>
+</section>
+
+<!-- Before / After -->
+<section class="before-after">
+  <h2>See the difference</h2>
+  <p class="section-sub">One command transforms cryptic spinners into plain English</p>
+  <div class="compare">
+    <div class="compare-box">
+      <div class="compare-header before">❌ Before</div>
+      <div class="compare-body">
+        <div>· Confabulating…</div>
+        <div>· Flibbertigibbeting…</div>
+        <div>· Prestidigitating…</div>
+        <div>· Defenestrating…</div>
+        <div class="confused">🤷 …what?</div>
+      </div>
+    </div>
+    <div class="compare-box">
+      <div class="compare-header after">✅ After</div>
+      <div class="compare-body">
+        <div>· Confabulating <span class="meaning">[making things up]</span></div>
+        <div>· Flibbertigibbeting <span class="meaning">[chattering wildly]</span></div>
+        <div>· Prestidigitating <span class="meaning">[doing magic tricks]</span></div>
+        <div>· Defenestrating <span class="meaning">[throwing out window]</span></div>
+        <div class="happy">✨ oh, neat!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <h2>Dead simple</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <h3>One Command</h3>
+      <p><code>npx unspin</code> — that's it. Zero dependencies, nothing to install.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📖</div>
+      <h3>185 Verbs</h3>
+      <p>Plain English explanation for every single spinner verb Claude Code uses.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">↩️</div>
+      <h3>Undo Anytime</h3>
+      <p><code>npx unspin --undo</code> restores Claude Code defaults instantly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Footer CTA -->
+<section class="footer-cta">
+  <h2>Try it now</h2>
+  <p>Takes 2 seconds. Seriously.</p>
+  <div class="footer-buttons">
+    <a href="https://github.com/furkanacikgozi/unspin" target="_blank" rel="noopener" class="footer-btn github">⭐ Star on GitHub</a>
+    <a href="https://www.npmjs.com/package/unspin" target="_blank" rel="noopener" class="footer-btn npm">📦 View on npm</a>
+  </div>
+  <p class="footer-text">MIT License</p>
+</section>
+
+<script>
+const verbs = [
+  { v: "Prestidigitating", m: "doing magic tricks" },
+  { v: "Confabulating", m: "making things up" },
+  { v: "Flibbertigibbeting", m: "chattering wildly" },
+  { v: "Cogitating", m: "thinking deeply" },
+  { v: "Defenestrating", m: "throwing out the window" },
+  { v: "Boondoggling", m: "wasting time" },
+  { v: "Canoodling", m: "being affectionate" },
+  { v: "Discombobulating", m: "causing confusion" },
+  { v: "Galumphing", m: "walking clumsily" },
+  { v: "Lollygagging", m: "wasting time idly" },
+  { v: "Perambulating", m: "walking around" },
+  { v: "Skedaddling", m: "running away fast" }
+];
+
+let i = 0;
+const verbEl = document.getElementById("verb");
+const meaningEl = document.getElementById("meaning");
+const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+if (!mq.matches) {
+  setInterval(() => {
+    i = (i + 1) % verbs.length;
+    verbEl.style.opacity = 0;
+    meaningEl.style.opacity = 0;
+    setTimeout(() => {
+      verbEl.textContent = verbs[i].v;
+      meaningEl.textContent = "[" + verbs[i].m + "]";
+      verbEl.style.opacity = 1;
+      meaningEl.style.opacity = 1;
+    }, 400);
+  }, 3000);
+}
+
+function copyCommand() {
+  const btn = document.getElementById("cta");
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText("npx unspin").then(() => {
+      btn.textContent = "Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "$ npx unspin"; btn.classList.remove("copied"); }, 2000);
+    });
+  }
+}
+</script>
+</body>
+</html>
