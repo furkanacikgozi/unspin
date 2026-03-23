@@ -1,0 +1,17 @@
+{
+  "name": "unspin",
+  "version": "1.0.0",
+  "description": "Add plain English explanations to Claude Code's spinner verbs",
+  "bin": {
+    "unspin": "./bin/unspin.js"
+  },
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": ["claude-code", "spinner", "verbs", "cli"],
+  "license": "MIT",
+  "files": ["bin/", "src/"]
+}
